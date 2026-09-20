@@ -2,6 +2,8 @@
 
 面向 Windows 的开源桌面工具，用于下载用户有权处理的 YouTube 视频，并生成英文与中文字幕。程序不需要 API Token；在线翻译不可用时可选用本地翻译模型。
 
+完整的 CLI 安装、运行、测试与发布步骤见：[本机环境运行指南](docs/LOCAL_ENVIRONMENT.zh-CN.md)。
+
 ## 普通用户
 
 从 GitHub Releases 下载 `windows-x64.zip`，解压后运行 `VideoSubtitleToolkit.exe`。首次启动进入“组件管理”，安装 yt-dlp、FFmpeg、aria2 和 Node.js。模型不随基础包分发，可按需安装。
@@ -45,4 +47,3 @@ python -m unittest discover -s tests -v
 ## 使用责任
 
 请遵守来源网站服务条款、著作权规定和所在地法律。只下载、转录或翻译你有权处理的内容。本项目不绕过 DRM、付费访问或访问控制。
-
