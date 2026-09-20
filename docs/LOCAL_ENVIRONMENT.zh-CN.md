@@ -179,7 +179,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 %LOCALAPPDATA%\VideoSubtitleToolkit
 ```
 
-其中保存配置、工具、模型、缓存、元数据、字幕中间结果和日志。默认视频输出目录为：
+其中保存配置、模型、缓存、元数据、字幕中间结果和日志；源码运行时的工具也保存在这里。Windows 便携版的 yt-dlp、aria2、FFmpeg/FFprobe 和通过组件管理器安装的 Node.js 则保存在 `VideoSubtitleToolkit.exe` 同级的 `tools`，可随整个软件文件夹复制。请勿放在无写入权限的 `Program Files` 中安装组件。旧版用户目录下的工具不自动迁移，也不作为便携版的回退来源。
+
+默认视频输出目录为：
 
 ```text
 %USERPROFILE%\Videos\VideoSubtitleToolkit
@@ -191,6 +193,8 @@ Set-ExecutionPolicy -Scope Process Bypass
 $env:VIDEO_SUBTITLE_TOOLKIT_HOME = 'D:\VideoSubtitleToolkitData'
 .\.venv\Scripts\pythonw.exe -B .\app\video_tool.py
 ```
+
+这个变量仅调整用户数据，不能改变便携版基础工具的安装目录。
 
 永久写入当前用户环境变量：
 

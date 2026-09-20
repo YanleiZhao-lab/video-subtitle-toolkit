@@ -86,7 +86,8 @@ class ToolPaths:
             matches = sorted(root.rglob(name)) if root.exists() else []
             return matches[0] if matches else root / name
 
-        tools_root = work / "tools"
+        packaged = bool(getattr(sys, "frozen", False))
+        tools_root = (Path(sys.executable).resolve().parent if packaged else work) / "tools"
         ffmpeg_root = tools_root / "ffmpeg"
         aria_root = tools_root / "aria2"
         configured_python = str(config.get("python_path", "")).strip()
@@ -124,7 +125,7 @@ class ToolPaths:
             logs=work / "logs",
             build_subtitles_script=toolkit / "build_video_subtitles.py",
             translate_captions_script=toolkit / "translate_video_captions.py",
-            packaged=bool(getattr(sys, "frozen", False)),
+            packaged=packaged,
         )
 
 

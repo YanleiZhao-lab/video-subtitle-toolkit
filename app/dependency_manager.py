@@ -24,15 +24,39 @@ class ComponentState:
 
 
 class DependencyManager:
-    def __init__(self, manifest_path: Path, data_root: Path):
+    def __init__(self, manifest_path: Path, data_root: Path, tools_root: Path | None = None):
         self.manifest_path = Path(manifest_path)
-        self.data_root = Path(data_root)
+        self.data_root = Path(data_root).resolve()
+        self.tools_root = Path(tools_root).resolve() if tools_root else self.data_root / "tools"
         payload = json.loads(self.manifest_path.read_text(encoding="utf-8"))
         self.components = {item["id"]: item for item in payload["components"]}
 
     def component_root(self, component_id: str) -> Path:
         item = self.components[component_id]
-        return self.data_root / item["destination"]
+        relative = Path(item["destination"])
+        parts = relative.parts
+        if relative.is_absolute() or len(parts) < 2 or any(part in {".", ".."} for part in parts):
+            raise ValueError(f"拒绝访问组件目录之外的路径：{relative}")
+        if parts[0] == "tools":
+            base = self.tools_root
+            child = Path(*parts[1:])
+        else:
+            base = self.data_root
+            child = relative
+        destination = (base / child).resolve()
+        if not destination.is_relative_to(base) or destination == base:
+            raise ValueError(f"拒绝访问组件目录之外的路径：{relative}")
+        return destination
+
+    def _ensure_writable(self, destination: Path) -> None:
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryFile(dir=destination.parent):
+                pass
+        except OSError as exc:
+            raise PermissionError(
+                f"安装目录没有写入权限：{destination.parent}。请将软件解压到可写目录后重试。"
+            ) from exc
 
     def state(self, component_id: str) -> ComponentState:
         item = self.components[component_id]
@@ -43,7 +67,7 @@ class DependencyManager:
             component_id,
             item["name"],
             installed,
-            str(root) if installed else item.get("description", "尚未安装"),
+            str(root) if installed else f"未安装；目标：{root}",
         )
 
     def states(self) -> list[ComponentState]:
@@ -108,8 +132,9 @@ class DependencyManager:
         item = self.components[component_id]
         progress = progress or (lambda downloaded, total, label: None)
         destination = self.component_root(component_id)
-        destination.parent.mkdir(parents=True, exist_ok=True)
+        self._ensure_writable(destination)
         staging = Path(tempfile.mkdtemp(prefix=f".{component_id}-", dir=destination.parent))
+        archive = staging.parent / f".{component_id}.download"
         try:
             if item["kind"] == "files":
                 for entry in item["files"]:
@@ -120,7 +145,6 @@ class DependencyManager:
                     url, expected_hash = self._github_asset(item)
                 else:
                     url, expected_hash = item["url"], item.get("sha256", "")
-                archive = staging.parent / f".{component_id}.download"
                 self._download(url, archive, expected_hash, progress)
                 if item["kind"] in {"zip", "github_zip"}:
                     self._extract_zip(archive, staging)
@@ -146,10 +170,9 @@ class DependencyManager:
         except Exception:
             shutil.rmtree(staging, ignore_errors=True)
             raise
+        finally:
+            archive.unlink(missing_ok=True)
 
     def remove(self, component_id: str) -> None:
-        destination = self.component_root(component_id).resolve()
-        data_root = self.data_root.resolve()
-        if os.path.commonpath([data_root, destination]) != str(data_root):
-            raise ValueError("拒绝删除应用数据目录之外的路径")
+        destination = self.component_root(component_id)
         shutil.rmtree(destination, ignore_errors=True)

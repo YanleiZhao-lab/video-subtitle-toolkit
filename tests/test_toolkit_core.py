@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 import tempfile
 import threading
@@ -333,11 +334,36 @@ class ToolkitCoreTests(unittest.TestCase):
 
     def test_discover_marks_frozen_application_as_packaged(self):
         with tempfile.TemporaryDirectory() as directory:
-            with patch.object(sys, "frozen", True, create=True), patch.dict(
-                "os.environ", {"VIDEO_SUBTITLE_TOOLKIT_HOME": directory}
-            ):
-                paths = ToolPaths.discover(Path(directory) / "application")
+            root = Path(directory)
+            portable = root / "portable"
+            toolkit = portable / "_internal"
+            data = root / "user-data"
+            with patch.object(sys, "frozen", True, create=True), patch.object(
+                sys, "executable", str(portable / "VideoSubtitleToolkit.exe")
+            ), patch.dict("os.environ", {"VIDEO_SUBTITLE_TOOLKIT_HOME": str(data)}):
+                paths = ToolPaths.discover(toolkit)
             self.assertTrue(paths.packaged)
+            self.assertEqual(paths.yt_dlp, portable / "tools/yt-dlp/yt-dlp.exe")
+            self.assertEqual(paths.aria2.parent, portable / "tools/aria2")
+            self.assertEqual(paths.ffmpeg.parent, portable / "tools/ffmpeg")
+            self.assertEqual(paths.whisper_models, data / "models/whisper")
+            self.assertEqual(paths.work, data)
+
+    def test_copied_portable_folder_keeps_tools_without_original_user_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / "original"
+            yt_dlp = original / "tools/yt-dlp/yt-dlp.exe"
+            yt_dlp.parent.mkdir(parents=True)
+            yt_dlp.write_bytes(b"tool")
+            copied = root / "copied"
+            shutil.copytree(original, copied)
+            with patch.object(sys, "frozen", True, create=True), patch.object(
+                sys, "executable", str(copied / "VideoSubtitleToolkit.exe")
+            ), patch.dict("os.environ", {"VIDEO_SUBTITLE_TOOLKIT_HOME": str(root / "new-user")}):
+                paths = ToolPaths.discover(copied / "_internal")
+            self.assertEqual(paths.yt_dlp.read_bytes(), b"tool")
+            self.assertEqual(paths.work, root / "new-user")
 
     def test_packaged_diagnostics_treat_ai_components_as_optional(self):
         with tempfile.TemporaryDirectory() as directory:

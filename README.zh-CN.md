@@ -8,6 +8,8 @@
 
 从 GitHub Releases 下载 `windows-x64.zip`，解压后运行 `VideoSubtitleToolkit.exe`。首次启动进入“组件管理”，安装 yt-dlp、FFmpeg、aria2 和 Node.js。模型不随基础包分发，可按需安装。
 
+便携版基础工具安装在 `VideoSubtitleToolkit.exe` 同级的 `tools` 文件夹，复制整个解压目录即可一并携带。请解压到当前用户可写的目录；如果解压到 `Program Files` 等受保护位置，组件安装会提示权限不足。`_internal` 只保存程序运行时，不是工具安装目标。旧版曾安装在 `%LOCALAPPDATA%\VideoSubtitleToolkit\tools` 的组件不会自动移动或用于便携版，请在新版组件管理器中重新安装；旧文件保留，可自行整理。
+
 基础包体积小，不包含 PyTorch。需要本地 Whisper 转录或离线翻译时，建议使用下方源码安装方式并执行 AI 可选安装；模型仍通过“组件管理”下载。
 
 ## 源码运行
@@ -28,7 +30,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ## 数据位置
 
-配置、组件、模型、缓存与日志默认保存在 `%LOCALAPPDATA%\VideoSubtitleToolkit`。可设置环境变量 `VIDEO_SUBTITLE_TOOLKIT_HOME` 改变位置。视频默认输出到当前用户的 `Videos\VideoSubtitleToolkit`，也可在界面选择其他目录。
+便携版的基础工具位于 EXE 同级的 `tools`。配置、模型、缓存与日志默认保存在 `%LOCALAPPDATA%\VideoSubtitleToolkit`，源码版的基础工具也保存在该用户数据目录。环境变量 `VIDEO_SUBTITLE_TOOLKIT_HOME` 只改变用户数据位置，不改变便携版的基础工具位置。视频默认输出到当前用户的 `Videos\VideoSubtitleToolkit`，也可在界面选择其他目录。
 
 ## 并发与翻译
 

@@ -38,7 +38,8 @@ class VideoToolkitApp(tk.Tk):
             self.config_data["english_subtitles"] = False
             self.config_data["chinese_subtitles"] = False
         self.dependency_manager = DependencyManager(
-            self.toolkit_directory / "dependencies.json", self.paths.work
+            self.toolkit_directory / "dependencies.json", self.paths.work,
+            tools_root=self.paths.yt_dlp.parent.parent,
         )
         self.performance_limits = detect_performance_limits()
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
@@ -277,14 +278,14 @@ class VideoToolkitApp(tk.Tk):
 
     def open_dependency_manager(self) -> None:
         window = tk.Toplevel(self)
-        window.title("可选组件管理")
+        window.title("组件管理")
         window.geometry("760x430")
         window.transient(self)
         window.columnconfigure(0, weight=1)
         window.rowconfigure(1, weight=1)
         ttk.Label(
             window,
-            text="先安装基础组件即可下载视频；AI 模型是源码版的可选功能。所有文件均校验 SHA-256。",
+            text="便携版基础工具安装在 EXE 同级 tools；AI 模型是源码版可选功能。请确保软件目录可写。",
             padding=(12, 12, 12, 6),
         ).grid(row=0, column=0, sticky="w")
         tree = ttk.Treeview(window, columns=("name", "state", "detail"), show="headings")
