@@ -325,7 +325,10 @@ class ToolkitCoreTests(unittest.TestCase):
             rendered = "\n".join(str(value) for value in managed)
             for forbidden in (".chatgpt", "Python312"):
                 self.assertNotIn(forbidden, rendered)
-            self.assertEqual(paths.yt_dlp, home / "tools" / "yt-dlp" / "yt-dlp.exe")
+            self.assertEqual(
+                paths.yt_dlp,
+                home.resolve() / "tools" / "yt-dlp" / "yt-dlp.exe",
+            )
 
     def test_write_reports_outputs_json_csv_and_errors(self):
         with tempfile.TemporaryDirectory() as directory:
