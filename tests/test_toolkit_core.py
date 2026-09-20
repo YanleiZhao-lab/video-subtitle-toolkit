@@ -334,7 +334,7 @@ class ToolkitCoreTests(unittest.TestCase):
 
     def test_discover_marks_frozen_application_as_packaged(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             portable = root / "portable"
             toolkit = portable / "_internal"
             data = root / "user-data"
@@ -351,7 +351,7 @@ class ToolkitCoreTests(unittest.TestCase):
 
     def test_copied_portable_folder_keeps_tools_without_original_user_data(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             original = root / "original"
             yt_dlp = original / "tools/yt-dlp/yt-dlp.exe"
             yt_dlp.parent.mkdir(parents=True)
