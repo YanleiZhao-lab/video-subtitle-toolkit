@@ -1,0 +1,6 @@
+torch==2.8.0
+openai-whisper==20250625
+transformers==5.17.0
+sentencepiece==0.2.2
+sacremoses==0.1.1
+

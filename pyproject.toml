@@ -1,0 +1,13 @@
+[project]
+name = "video-subtitle-toolkit"
+version = "1.0.0"
+description = "Windows GUI for downloading videos and creating bilingual subtitles"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = {text = "MIT"}
+authors = [{name = "YanleiZhao-lab"}]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+

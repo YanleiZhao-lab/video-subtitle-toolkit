@@ -1,0 +1,16 @@
+{
+  "output_directory": "",
+  "whisper_model": "small.en",
+  "download_video": true,
+  "english_subtitles": true,
+  "chinese_subtitles": true,
+  "validate_outputs": true,
+  "translation_mode": "auto",
+  "download_workers": 2,
+  "translation_workers": 2,
+  "download_retries": 10,
+  "concurrent_fragments": 4,
+  "minimum_free_gb": 2,
+  "python_path": "",
+  "node_path": ""
+}

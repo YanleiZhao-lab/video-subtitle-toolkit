@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "components": [
+    {
+      "id": "yt-dlp",
+      "name": "yt-dlp",
+      "description": "YouTube 链接解析和媒体下载",
+      "kind": "file",
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe",
+      "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
+      "target": "yt-dlp.exe",
+      "destination": "tools/yt-dlp",
+      "expected": ["yt-dlp.exe"],
+      "license": "https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE"
+    },
+    {
+      "id": "aria2",
+      "name": "aria2",
+      "description": "多连接下载与断点续传",
+      "kind": "zip",
+      "url": "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip",
+      "sha256": "67d015301eef0b612191212d564c5bb0a14b5b9c4796b76454276a4d28d9b288",
+      "destination": "tools/aria2",
+      "expected": ["**/aria2c.exe"],
+      "license": "https://github.com/aria2/aria2/blob/master/COPYING"
+    },
+    {
+      "id": "ffmpeg",
+      "name": "FFmpeg",
+      "description": "音视频合并、探测和解码",
+      "kind": "github_zip",
+      "repository": "BtbN/FFmpeg-Builds",
+      "release": "latest",
+      "asset": "ffmpeg-master-latest-win64-gpl-shared.zip",
+      "destination": "tools/ffmpeg",
+      "expected": ["**/ffmpeg.exe", "**/ffprobe.exe"],
+      "license": "https://ffmpeg.org/legal.html"
+    },
+    {
+      "id": "node",
+      "name": "Node.js",
+      "description": "yt-dlp 的 YouTube JavaScript 运行时",
+      "kind": "zip",
+      "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
+      "sha256": "57f71ab3652e797d84acddc79c81cc9ff1c6ddb2a1974cdb83f00fee9bff4c73",
+      "destination": "tools/node",
+      "expected": ["**/node.exe"],
+      "license": "https://github.com/nodejs/node/blob/main/LICENSE"
+    },
+    {
+      "id": "whisper-small-en",
+      "name": "Whisper small.en 模型",
+      "description": "约 462 MiB；用于本地英文语音转录",
+      "kind": "file",
+      "url": "https://openaipublic.azureedge.net/main/whisper/models/f953ad0fd29cacd07d5a9eda5624af0f6bcf2258be67c92b79389873d91e0872/small.en.pt",
+      "sha256": "f953ad0fd29cacd07d5a9eda5624af0f6bcf2258be67c92b79389873d91e0872",
+      "target": "small.en.pt",
+      "destination": "models/whisper",
+      "expected": ["small.en.pt"],
+      "license": "https://github.com/openai/whisper/blob/main/LICENSE"
+    },
+    {
+      "id": "opus-mt-en-zh",
+      "name": "离线中英翻译模型",
+      "description": "约 301 MiB；用于在线翻译不可用时回退",
+      "kind": "files",
+      "destination": "models/opus-mt-en-zh",
+      "expected": ["config.json", "pytorch_model.bin", "source.spm", "target.spm", "vocab.json"],
+      "license": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh",
+      "files": [
+        {"name": "config.json", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/config.json", "sha256": "bcae8ed74fed77fb51c58462b62397fee6b1a1a34aece79183a0dd02ad329e71"},
+        {"name": "generation_config.json", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/generation_config.json", "sha256": "837839ed0534a27084f9b980fc33f47729052dd89cb26cca7ac830765ed30e49"},
+        {"name": "pytorch_model.bin", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/pytorch_model.bin", "sha256": "69a1d6ec829cee349360b3b677ac0aa99a7d88822d1a6578370029efffdca3f5"},
+        {"name": "source.spm", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/source.spm", "sha256": "5775ddc9e3ff2fae91554da56468ad35ff56edaba870fea74447bc7234bfdaa8"},
+        {"name": "target.spm", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/target.spm", "sha256": "81dc94efa84e4025ef38d25d5d07429fe41e3eb29d44003f1db6fe98487b0052"},
+        {"name": "tokenizer_config.json", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/tokenizer_config.json", "sha256": "5df181fba586b7cb37d429c13c4f96cb43fb11de7bb6489733d9eded32418179"},
+        {"name": "vocab.json", "url": "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh/resolve/main/vocab.json", "sha256": "f1832ca38f7aa158b9a944ff583e4901e6b37d9d4ad9241f03838e636e9cfb03"}
+      ]
+    }
+  ]
+}
