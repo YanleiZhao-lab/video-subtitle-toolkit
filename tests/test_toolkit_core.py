@@ -330,6 +330,14 @@ class ToolkitCoreTests(unittest.TestCase):
                 home.resolve() / "tools" / "yt-dlp" / "yt-dlp.exe",
             )
 
+    def test_discover_marks_frozen_application_as_packaged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(sys, "frozen", True, create=True), patch.dict(
+                "os.environ", {"VIDEO_SUBTITLE_TOOLKIT_HOME": directory}
+            ):
+                paths = ToolPaths.discover(Path(directory) / "application")
+            self.assertTrue(paths.packaged)
+
     def test_write_reports_outputs_json_csv_and_errors(self):
         with tempfile.TemporaryDirectory() as directory:
             report_dir = Path(directory)

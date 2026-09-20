@@ -67,6 +67,7 @@ class ToolPaths:
     logs: Path
     build_subtitles_script: Path
     translate_captions_script: Path
+    packaged: bool = False
 
     @classmethod
     def discover(cls, toolkit: Path | None = None, config: dict | None = None) -> "ToolPaths":
@@ -123,6 +124,7 @@ class ToolPaths:
             logs=work / "logs",
             build_subtitles_script=toolkit / "build_video_subtitles.py",
             translate_captions_script=toolkit / "translate_video_captions.py",
+            packaged=bool(getattr(sys, "frozen", False)),
         )
 
 
@@ -556,8 +558,12 @@ def check_online_translation(timeout: int = 8) -> tuple[bool, str]:
 
 def diagnose_environment(paths: ToolPaths, config: dict, check_network: bool = False) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
+    if paths.packaged:
+        diagnostics.append(Diagnostic("OK", "运行环境", "Windows 便携版内置运行时"))
+    else:
+        ok, message = _command_version(paths.python)
+        diagnostics.append(Diagnostic("OK" if ok else "错误", "Python", message))
     required = {
-        "Python": paths.python,
         "yt-dlp": paths.yt_dlp,
         "aria2": paths.aria2,
         "FFmpeg": paths.ffmpeg,
@@ -944,6 +950,11 @@ class PipelineEngine:
     def _transcribe(
         self, task: VideoTask, video: Path, runner: ProcessRunner | None = None
     ) -> None:
+        if self.paths.packaged:
+            raise RuntimeError(
+                "轻量便携版未包含本地 AI 运行时。请取消英文/中文字幕，"
+                "或按 README 使用源码版并安装 AI 可选依赖。"
+            )
         self.paths.transcripts.mkdir(parents=True, exist_ok=True)
         model_name = str(self.config.get("whisper_model", "small.en"))
         transcript = self.paths.transcripts / f"{task.video_id}.{model_name}.json"
@@ -985,6 +996,8 @@ class PipelineEngine:
     def _translate_online(
         self, task: VideoTask, video: Path, runner: ProcessRunner | None = None
     ) -> None:
+        if self.paths.packaged:
+            raise RuntimeError("轻量便携版不能启动外部 Python 翻译脚本，请使用源码版 AI 运行时。")
         if self._has_chinese_subtitle(task, video):
             return
         arguments = [
@@ -1006,6 +1019,8 @@ class PipelineEngine:
     def _translate_offline(
         self, task: VideoTask, video: Path, runner: ProcessRunner | None = None
     ) -> None:
+        if self.paths.packaged:
+            raise RuntimeError("轻量便携版未包含离线翻译运行时，请使用源码版 AI 运行时。")
         if self._has_chinese_subtitle(task, video):
             return
         with ascii_project_drive(self.paths.project) as mapped_root:
