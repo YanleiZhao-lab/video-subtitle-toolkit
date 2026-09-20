@@ -31,8 +31,12 @@ class VideoToolkitApp(tk.Tk):
         self.toolkit_directory = Path(__file__).resolve().parent
         bootstrap_paths = ToolPaths.discover(self.toolkit_directory)
         self.config_path = bootstrap_paths.work / "config.json"
+        first_run = not self.config_path.exists()
         self.config_data, self.config_warning = load_config(self.config_path)
         self.paths = ToolPaths.discover(self.toolkit_directory, self.config_data)
+        if first_run and self.paths.packaged:
+            self.config_data["english_subtitles"] = False
+            self.config_data["chinese_subtitles"] = False
         self.dependency_manager = DependencyManager(
             self.toolkit_directory / "dependencies.json", self.paths.work
         )
@@ -43,6 +47,7 @@ class VideoToolkitApp(tk.Tk):
         self.worker: threading.Thread | None = None
         self.last_report_directory: Path | None = None
         self.task_rows: dict[str, str] = {}
+        self.dependency_prompt_shown = False
 
         self.title("视频下载与字幕工具")
         self.geometry("1080x760")
@@ -279,7 +284,7 @@ class VideoToolkitApp(tk.Tk):
         window.rowconfigure(1, weight=1)
         ttk.Label(
             window,
-            text="基础媒体工具和 AI 模型按需下载；所有文件均校验 SHA-256。",
+            text="先安装基础组件即可下载视频；AI 模型是源码版的可选功能。所有文件均校验 SHA-256。",
             padding=(12, 12, 12, 6),
         ).grid(row=0, column=0, sticky="w")
         tree = ttk.Treeview(window, columns=("name", "state", "detail"), show="headings")
@@ -340,6 +345,47 @@ class VideoToolkitApp(tk.Tk):
 
             threading.Thread(target=worker, name="component-installer", daemon=True).start()
 
+        def install_base() -> None:
+            component_ids = ["yt-dlp", "aria2", "ffmpeg", "node"]
+            missing = [item for item in component_ids if not self.dependency_manager.state(item).installed]
+            if not missing:
+                messagebox.showinfo("组件管理", "基础组件已经全部安装。", parent=window)
+                return
+            install_button.configure(state="disabled")
+            install_base_button.configure(state="disabled")
+            remove_button.configure(state="disabled")
+
+            def report(done: int, total: int, label: str) -> None:
+                percent = done * 100 / total if total else 0
+                self.after(0, lambda: (progress.configure(value=percent), status.configure(
+                    text=f"正在下载 {label}：{percent:.1f}%"
+                )))
+
+            def worker() -> None:
+                try:
+                    for index, component_id in enumerate(missing, 1):
+                        name = self.dependency_manager.components[component_id]["name"]
+                        self.after(0, lambda value=name, current=index: status.configure(
+                            text=f"正在安装 {value}（{current}/{len(missing)}）"
+                        ))
+                        self.dependency_manager.install(component_id, report)
+                    self.after(0, lambda: messagebox.showinfo(
+                        "安装完成", "基础组件已安装，可以重新执行环境检查。", parent=window
+                    ))
+                except Exception as exc:
+                    message = str(exc)
+                    self.after(0, lambda value=message: messagebox.showerror(
+                        "安装失败", value, parent=window
+                    ))
+                finally:
+                    self.after(0, lambda: (
+                        refresh(), install_button.configure(state="normal"),
+                        install_base_button.configure(state="normal"),
+                        remove_button.configure(state="normal"),
+                    ))
+
+            threading.Thread(target=worker, name="base-component-installer", daemon=True).start()
+
         def remove() -> None:
             component_id = selected()
             if not component_id:
@@ -355,6 +401,8 @@ class VideoToolkitApp(tk.Tk):
 
         install_button = ttk.Button(buttons, text="安装 / 修复", command=install)
         install_button.pack(side="left")
+        install_base_button = ttk.Button(buttons, text="一键安装基础组件", command=install_base)
+        install_base_button.pack(side="left", padx=(8, 0))
         remove_button = ttk.Button(buttons, text="移除", command=remove)
         remove_button.pack(side="left", padx=(8, 0))
         ttk.Button(buttons, text="关闭", command=window.destroy).pack(side="right")
@@ -403,6 +451,15 @@ class VideoToolkitApp(tk.Tk):
             messagebox.showerror("链接无效", str(exc), parent=self)
             return
         config = self._collect_config()
+        if self.paths.packaged and (config["english_subtitles"] or config["chinese_subtitles"]):
+            messagebox.showerror(
+                "便携版未包含本地 AI",
+                "轻量便携版当前用于视频下载，不包含数 GB 的本地转录依赖。\n\n"
+                "请取消英文/中文字幕选项；需要本地字幕时，请按本机环境运行指南使用源码版，"
+                "并执行 scripts\\setup.ps1 -InstallAI。",
+                parent=self,
+            )
+            return
         if config["chinese_subtitles"]:
             config["english_subtitles"] = True
             self.english_var.set(True)
@@ -549,6 +606,14 @@ class VideoToolkitApp(tk.Tk):
                     messagebox.showerror("环境检查", text, parent=self)
                 else:
                     messagebox.showinfo("环境检查", text, parent=self)
+            elif not self.dependency_prompt_shown:
+                base_names = {"yt-dlp", "aria2", "FFmpeg", "FFprobe"}
+                missing_base = any(
+                    item.level == "错误" and item.component in base_names for item in diagnostics
+                )
+                if missing_base:
+                    self.dependency_prompt_shown = True
+                    self.after(100, self.open_dependency_manager)
 
     def _upsert_task(self, item: dict) -> None:
         video_id = item["video_id"]

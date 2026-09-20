@@ -44,7 +44,7 @@ gh --version
 $releaseDir = Join-Path $PWD 'video-subtitle-toolkit-release'
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-gh release download v1.0.3 `
+gh release download v1.0.4 `
   --repo YanleiZhao-lab/video-subtitle-toolkit `
   --pattern '*.zip' `
   --pattern '*.sha256' `
@@ -62,7 +62,7 @@ gh auth status
 ### 2.3 校验下载文件
 
 ```powershell
-$zip = Join-Path $releaseDir 'video-subtitle-toolkit-1.0.3-windows-x64.zip'
+$zip = Join-Path $releaseDir 'video-subtitle-toolkit-1.0.4-windows-x64.zip'
 $checksumFile = "$zip.sha256"
 $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLower()
 $expected = ((Get-Content -LiteralPath $checksumFile -Encoding ASCII) -split '\s+')[0].ToLower()
@@ -84,7 +84,7 @@ Start-Process -FilePath (Join-Path $installDir 'VideoSubtitleToolkit.exe')
 
 首次启动后，通过“组件管理”按需安装 yt-dlp、FFmpeg、aria2、Node.js 和模型。所有下载项均执行 SHA-256 校验。
 
-如果运行后不断出现新窗口，说明仍在使用 `v1.0.2` 或更早版本。先结束旧进程，再安装 `v1.0.3` 或更高版本：
+如果运行后不断出现新窗口，说明仍在使用 `v1.0.2` 或更早版本。先结束旧进程，再安装 `v1.0.4` 或更高版本：
 
 ```powershell
 Get-Process -Name VideoSubtitleToolkit -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -232,14 +232,14 @@ git status --short
 构建 Windows 轻量包：
 
 ```powershell
-.\scripts\build_release.ps1 -Version 1.0.3
+.\scripts\build_release.ps1 -Version 1.0.4
 ```
 
 输出位于：
 
 ```text
-release\video-subtitle-toolkit-1.0.3-windows-x64.zip
-release\video-subtitle-toolkit-1.0.3-windows-x64.zip.sha256
+release\video-subtitle-toolkit-1.0.4-windows-x64.zip
+release\video-subtitle-toolkit-1.0.4-windows-x64.zip.sha256
 ```
 
 打包脚本会在构建前清理固定的 `build`、`dist` 和 `release` 目录；不要把个人文件放进这些目录。

@@ -578,15 +578,28 @@ def diagnose_environment(paths: ToolPaths, config: dict, check_network: bool = F
             ok, message = _command_version(path)
         diagnostics.append(Diagnostic("OK" if ok else "错误", component, message))
 
-    model = paths.whisper_models / f"{config.get('whisper_model', 'small.en')}.pt"
-    diagnostics.append(Diagnostic("OK" if model.is_file() else "错误", "Whisper 模型", str(model)))
-    diagnostics.append(
-        Diagnostic(
-            "OK" if paths.media_dependencies.is_dir() else "错误",
-            "Python 媒体依赖",
-            str(paths.media_dependencies),
+    needs_transcript = config.get("english_subtitles", True) or config.get("chinese_subtitles", True)
+    if needs_transcript:
+        model = paths.whisper_models / f"{config.get('whisper_model', 'small.en')}.pt"
+        model_level = "OK" if model.is_file() else ("警告" if paths.packaged else "错误")
+        model_message = str(model)
+        if paths.packaged and not model.is_file():
+            model_message += "；可选，轻量便携版未包含本地 AI 运行时"
+        diagnostics.append(Diagnostic(model_level, "Whisper 模型", model_message))
+        media_exists = paths.media_dependencies.is_dir()
+        media_level = "OK" if media_exists else ("警告" if paths.packaged else "错误")
+        media_message = str(paths.media_dependencies)
+        if paths.packaged and not media_exists:
+            media_message += "；可选，本地转录需使用源码版并安装 AI 依赖"
+        diagnostics.append(
+            Diagnostic(
+                media_level,
+                "Python 媒体依赖",
+                media_message,
+            )
         )
-    )
+    else:
+        diagnostics.append(Diagnostic("OK", "字幕运行时", "未启用字幕，无需安装本地 AI 组件"))
     if paths.node and paths.node.is_file():
         diagnostics.append(Diagnostic("OK", "Node.js", str(paths.node)))
     else:
@@ -621,8 +634,12 @@ def diagnose_environment(paths: ToolPaths, config: dict, check_network: bool = F
             diagnostics.append(Diagnostic("警告", "在线翻译", f"当前无法连接：{message}"))
     if config.get("chinese_subtitles", True) and mode in {"auto", "offline"}:
         exists = paths.offline_translation_model.is_dir()
+        level = "OK" if exists else ("警告" if paths.packaged else "错误")
+        message = str(paths.offline_translation_model)
+        if paths.packaged and not exists:
+            message += "；可选，离线翻译需使用源码版 AI 运行时"
         diagnostics.append(
-            Diagnostic("OK" if exists else "错误", "本地翻译模型", str(paths.offline_translation_model))
+            Diagnostic(level, "本地翻译模型", message)
         )
     return diagnostics
 

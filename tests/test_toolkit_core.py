@@ -19,6 +19,7 @@ from toolkit_core import (  # noqa: E402
     VideoTask,
     calculate_performance_limits,
     decode_output_line,
+    diagnose_environment,
     extract_urls,
     find_video_file,
     load_config,
@@ -337,6 +338,29 @@ class ToolkitCoreTests(unittest.TestCase):
             ):
                 paths = ToolPaths.discover(Path(directory) / "application")
             self.assertTrue(paths.packaged)
+
+    def test_packaged_diagnostics_treat_ai_components_as_optional(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self.make_paths(directory)
+            paths = ToolPaths(**{**paths.__dict__, "packaged": True})
+            config = DEFAULT_CONFIG.copy()
+            diagnostics = diagnose_environment(paths, config, check_network=False)
+            levels = {item.component: item.level for item in diagnostics}
+            self.assertEqual(levels["Whisper 模型"], "警告")
+            self.assertEqual(levels["Python 媒体依赖"], "警告")
+            self.assertEqual(levels["本地翻译模型"], "警告")
+
+    def test_diagnostics_skip_ai_components_when_subtitles_are_disabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self.make_paths(directory)
+            paths = ToolPaths(**{**paths.__dict__, "packaged": True})
+            config = DEFAULT_CONFIG.copy()
+            config.update({"english_subtitles": False, "chinese_subtitles": False})
+            diagnostics = diagnose_environment(paths, config, check_network=False)
+            components = {item.component for item in diagnostics}
+            self.assertIn("字幕运行时", components)
+            self.assertNotIn("Whisper 模型", components)
+            self.assertNotIn("Python 媒体依赖", components)
 
     def test_write_reports_outputs_json_csv_and_errors(self):
         with tempfile.TemporaryDirectory() as directory:
